@@ -47,7 +47,7 @@ server <- function(input, output) {
         file <- input$file1
         ext <- tools::file_ext(file$datapath)
         req(file)
-        validate(need(ext == "txt", "Please upload a csv file"))
+        validate(need(ext == "csv", "Please upload a csv file"))
         data <- read.csv(file$datapath, header = input$header)
         head(data)
         data$variety <- factor(data$variety)
