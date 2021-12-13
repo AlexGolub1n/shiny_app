@@ -7,6 +7,8 @@ library(RSQLite)
 library(DBI)
 library(jsonlite)
 library(GGally)
+library(promises)
+library(future)
 
 iris.true <- iris[,5]
 iris.train <- iris[,-5] # no cheating
@@ -50,6 +52,7 @@ server <- function(input, output) {
     req(file)
     validate(need(ext == "txt", "Please upload a csv file"))
     data <- read.csv(file$datapath, header = input$header)
+    data <- as.data.frame(data)
     head(data)
     con <- dbConnect(RSQLite:: SQLite(), "/db")
     dbWriteTable(con, "Data_iris", data)
@@ -72,22 +75,23 @@ server <- function(input, output) {
       con <- dbConnect(RSQLite:: SQLite(), "/db")
       table <- dbReadTable(con, "Data_iris")
       table$variety <- factor(table$variety)
-      levels(table$variety)
-      sum(is.na(table))
-      table<-table[1:100,]
-      set.seed(100)
-      samp<-sample(1:100,80)
-      ir_test<-table[samp,]
-      ir_ctrl<-table[-samp,]
-      ggpairs(ir_test)
+      #levels(table$variety)
+      #sum(is.na(table))
+      #table<-table[1:100,]
+      #set.seed(100)
+      #samp<-sample(1:100,80)
+      #ir_test<-table[samp,]
+      #ir_ctrl<-table[-samp,]
+      #ggpairs(ir_test)
       #y<-ir_test$variety
       #x<-ir_test$sepal.length
       #glfit<-glm(y~x, family = 'binomial')
       #summary(glfit)
-      #newdata<- data.frame(x=ir_ctrl$Sepal.length)
-      #predicted_val<-predict(glfit, newdata, type="response")
-      #prediction<-data.frame(ir_ctrl$sepal.length, ir_ctrl$variety,predicted_val)
-      #prediction
+      model <- readRDS("./model_reg.rds")
+      newdata<- data.frame(x=table$sepal.length)
+      predicted_val<-predict(model, newdata, type="response")
+      prediction<-data.frame(table$sepal.length, table$variety,predicted_val)
+      prediction
       
       qplot(prediction[,1], round(prediction[,3]), col=prediction[,2], xlab = 'Sepal Length', ylab = 'Prediction using Logistic Reg.')
       
